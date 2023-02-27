@@ -17,14 +17,40 @@ export default function Home() {
     themes: string[];
   }>();
   const checkAPI = async () => {
+    const cachedData = localStorage.getItem("match-objectives-cache");
+    const body = JSON.stringify({ users });
+    if (cachedData) {
+      const parsedData = JSON.parse(cachedData);
+      if (parsedData?.[body]) {
+        setData(parsedData?.[body]);
+        return;
+      }
+    }
     const results = await fetch("/api/match-objectives", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ users }),
+      body,
+      cache: "force-cache",
     });
-    setData(await results.json());
+    const newData = await results.json();
+    setData(newData);
+    if (cachedData) {
+      const parsedData = JSON.parse(cachedData);
+      parsedData[body] = newData;
+      localStorage.setItem(
+        "match-objectives-cache",
+        JSON.stringify(parsedData)
+      );
+    } else {
+      const parsedData = {};
+      parsedData[body] = newData;
+      localStorage.setItem(
+        "match-objectives-cache",
+        JSON.stringify(parsedData)
+      );
+    }
     // const results = mockResponse;
     // setData(results);
   };

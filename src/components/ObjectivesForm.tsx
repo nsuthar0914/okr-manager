@@ -38,27 +38,49 @@ export const ObjectivesForm = ({
     delete updatedUsers[userIdx].objectives[objIdx];
     setUsers(updatedUsers);
   };
-  const handleAddUserObjective = (userIdx: number) => {
+  const handleAddUserObjective = (userIdx: number, objective: string = "") => {
     const updatedUsers = [...users];
     if (!updatedUsers[userIdx].objectives.some((x) => x === "")) {
-      updatedUsers[userIdx].objectives.push("");
+      updatedUsers[userIdx].objectives.push(objective);
     }
     setUsers(updatedUsers);
   };
   const generateUserObjective = async (userIdx: number) => {
+    const cachedData = localStorage.getItem("generate-objective-cache");
+    const body = JSON.stringify({ suggestion: suggestions[userIdx] });
+    if (cachedData) {
+      const parsedData = JSON.parse(cachedData);
+      if (parsedData?.[body]) {
+        handleAddUserObjective(userIdx, parsedData?.[body]);
+        return;
+      }
+    }
     const results = await fetch("/api/generate-objective", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ suggestion: suggestions[userIdx] }),
+      body,
+      cache: "force-cache",
     });
     const resultsJson = await results.json();
-    const updatedUsers = [...users];
-    if (!updatedUsers[userIdx].objectives.some((x) => x === "")) {
-      updatedUsers[userIdx].objectives.push(resultsJson.objective);
+    const newObjective = resultsJson.objective.replace(/^"(.*)"$/, "$1");
+    handleAddUserObjective(userIdx, newObjective);
+    if (cachedData) {
+      const parsedData = JSON.parse(cachedData);
+      parsedData[body] = newObjective;
+      localStorage.setItem(
+        "generate-objective-cache",
+        JSON.stringify(parsedData)
+      );
+    } else {
+      const parsedData = {};
+      parsedData[body] = newObjective;
+      localStorage.setItem(
+        "generate-objective-cache",
+        JSON.stringify(parsedData)
+      );
     }
-    setUsers(updatedUsers);
   };
   return (
     <div className={styles.form}>
