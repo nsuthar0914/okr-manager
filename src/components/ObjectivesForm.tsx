@@ -1,11 +1,22 @@
+/* tslint:disable */
 import styles from "@/styles/Home.module.css";
 import { useState } from "react";
-import { mockUsers } from "@/pages/mock-data/mock-users";
 import React from "react";
+import { User } from "@/pages/api/match-objectives";
 
-export const ObjectivesForm = ({ users, setUsers }) => {
+export const ObjectivesForm = ({
+  users,
+  setUsers,
+}: {
+  users: User[];
+  setUsers: (users: User[]) => null;
+}) => {
   const [suggestions, setSuggestions] = useState<Record<number, string>>({});
-  const handleChange = (event, index, type) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+    type: string
+  ) => {
     const updatedUsers = [...users];
     if (type === "id") {
       updatedUsers[index].id = event.target.value;
@@ -22,19 +33,19 @@ export const ObjectivesForm = ({ users, setUsers }) => {
       setUsers([...users, { id: "", objectives: [""] }]);
     }
   };
-  const handleRemoveUserObjective = (userIdx, objIdx) => {
+  const handleRemoveUserObjective = (userIdx: number, objIdx: number) => {
     const updatedUsers = [...users];
     delete updatedUsers[userIdx].objectives[objIdx];
     setUsers(updatedUsers);
   };
-  const handleAddUserObjective = (userIdx) => {
+  const handleAddUserObjective = (userIdx: number) => {
     const updatedUsers = [...users];
     if (!updatedUsers[userIdx].objectives.some((x) => x === "")) {
       updatedUsers[userIdx].objectives.push("");
     }
     setUsers(updatedUsers);
   };
-  const generateUserObjective = async (userIdx) => {
+  const generateUserObjective = async (userIdx: number) => {
     const results = await fetch("/api/generate-objective", {
       method: "POST",
       headers: {

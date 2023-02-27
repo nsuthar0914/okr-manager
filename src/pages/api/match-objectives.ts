@@ -8,7 +8,7 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-interface User {
+export interface User {
   id: string;
   objectives: string[];
 }

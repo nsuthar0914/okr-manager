@@ -1,9 +1,7 @@
 import Head from "next/head";
-import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
-import { mockUsers, users } from "./mock-data/mock-users";
-import { mockResponse } from "./mock-data/mock-response";
+import { mockUsers } from "./mock-data/mock-users";
 import { useState } from "react";
 import { ThemeMatch, UserMatch } from "./api/match-objectives";
 import { NetworkGraph } from "@/components/NetworkGraph";
