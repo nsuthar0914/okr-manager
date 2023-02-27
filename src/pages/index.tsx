@@ -33,7 +33,8 @@ const NetworkGraph: React.FC<Props> = ({
 
     const svg = d3
       .select(svgRef.current)
-      .attr("viewBox", [-width / 2, -height / 2, width, height]);
+      .attr("viewBox", [-width / 2, -height / 2, width, height])
+      .style("font", "12px sans-serif");
     svg.selectAll("*").remove();
     // create the links
     const links = [];
@@ -42,7 +43,7 @@ const NetworkGraph: React.FC<Props> = ({
         links.push({
           source: um.user.id,
           target: `${um.user.id}-${obj}`,
-          value: 1,
+          value: 0.9,
         })
       );
       um.themeScores.forEach((ts) =>
@@ -67,24 +68,34 @@ const NetworkGraph: React.FC<Props> = ({
     });
     themes.forEach((theme) => nodes.push({ id: theme, type: "theme" }));
 
-    // create the links and nodes groups
-    const linkGroup = svg
-      .append("g")
-      .attr("class", "links")
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6);
-    const nodeGroup = svg
-      .append("g")
-      .attr("class", "nodes")
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 1.5);
-
-    // create the links
-    const link = linkGroup
-      .selectAll("line")
-      .data(links)
-      .join("line")
-      .attr("stroke-width", (d) => d.value);
+    const simulation = d3
+      .forceSimulation(nodes)
+      .force(
+        "link",
+        d3
+          .forceLink(links)
+          .id((d) => d.id)
+          .distance((d) => d.value)
+      )
+      .force("charge", d3.forceManyBody())
+      .force("center", d3.forceCenter());
+    const types = Array.from(new Set(links.map((d) => d.type)));
+    const color = d3.scaleOrdinal(types, d3.schemeCategory10);
+    svg
+      .append("defs")
+      .selectAll("marker")
+      .data(types)
+      .join("marker")
+      .attr("id", (d) => `arrow-${d}`)
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 15)
+      .attr("refY", -0.5)
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
+      .attr("orient", "auto")
+      .append("path")
+      .attr("fill", color)
+      .attr("d", "M0,-5L10,0L0,5");
 
     function drag(simulation: d3.Simulation<Node, Link>) {
       function dragstarted(event: any) {
@@ -116,25 +127,31 @@ const NetworkGraph: React.FC<Props> = ({
         .on("drag", dragged)
         .on("end", dragended);
     }
+    const link = svg
+      .append("g")
+      .attr("class", "links")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke-width", (d) => d.value);
 
-    const simulation = d3
-      .forceSimulation(nodes)
-      .force(
-        "link",
-        d3
-          .forceLink(links)
-          .id((d) => d.id)
-          .distance(50)
-      )
-      .force("charge", d3.forceManyBody())
-      .force("center", d3.forceCenter());
+    const node = svg
+      .append("g")
+      .attr("fill", "currentColor")
+      .attr("stroke-linecap", "round")
+      .attr("stroke-linejoin", "round")
+      .selectAll("g")
+      .data(nodes)
+      .join("g")
+      .call(drag(simulation));
 
-    // create the nodes
-    const node = nodeGroup
-      .selectAll("circle")
-      .data<Node>(nodes)
-      .join("circle")
-      .attr("r", (d) => (d.type === "user" ? 12 : 8))
+    node
+      .append("circle")
+      .attr("stroke", "white")
+      .attr("stroke-width", 1.5)
+      .attr("r", 4)
       .attr("fill", (d) => {
         switch (d.type) {
           case "theme":
@@ -146,8 +163,19 @@ const NetworkGraph: React.FC<Props> = ({
           default:
             return "black";
         }
-      })
-      .call(drag(simulation)); // ts-ignore-line
+      });
+
+    node
+      .append("text")
+      .style("font-size", "4px")
+      .attr("x", 8)
+      .attr("y", "0.31em")
+      .text((d) => (d.type != "objective" ? d.id : ""))
+      .clone(true)
+      .lower()
+      .attr("fill", "none")
+      .attr("stroke", "white")
+      .attr("stroke-width", 3);
     node.append("title").text((d) => d.id);
     simulation.on("tick", () => {
       link
@@ -155,9 +183,10 @@ const NetworkGraph: React.FC<Props> = ({
         .attr("y1", (d) => d.source.y)
         .attr("x2", (d) => d.target.x)
         .attr("y2", (d) => d.target.y);
-
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+      node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
+
     console.log(nodes, links);
   }, []);
 
@@ -175,16 +204,17 @@ export default function Home() {
     themes: string[];
   }>();
   const checkAPI = async () => {
-    const results = await fetch("/api/match-objectives", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ users }),
-    });
+    // const results = await fetch("/api/match-objectives", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({ users }),
+    // });
     // console.log(await results.json());
-    // const results = mockResponse;
-    setData(await results.json());
+    // setData(await results.json());
+    const results = mockResponse;
+    setData(results);
   };
   console.log(data);
   return (
