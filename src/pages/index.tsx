@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
-import { mockUsers } from "./mock-data/mock-users";
+import { mockUsers } from "../mock-data/mock-users";
 import { useState } from "react";
 import { ThemeMatch, UserMatch } from "./api/match-objectives";
 import { NetworkGraph } from "@/components/NetworkGraph";
