@@ -10,6 +10,7 @@ import { ObjectivesForm } from "@/components/ObjectivesForm";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState(mockUsers);
   const [data, setData] = useState<{
     themeMatches: ThemeMatch[];
@@ -26,6 +27,7 @@ export default function Home() {
         return;
       }
     }
+    setLoading(true);
     const results = await fetch("/api/match-objectives", {
       method: "POST",
       headers: {
@@ -51,6 +53,7 @@ export default function Home() {
         JSON.stringify(parsedData)
       );
     }
+    setLoading(false);
     // const results = mockResponse;
     // setData(results);
   };
@@ -69,8 +72,13 @@ export default function Home() {
             <ObjectivesForm users={users} setUsers={setUsers} />
           </div>
           <div className={styles.right}>
-            <button className={styles.Button} onClick={checkAPI}>
-              {data ? "Update alignment" : "Get alignment"}
+            <button
+              className={styles.Button}
+              onClick={checkAPI}
+              disabled={loading}
+            >
+              {data ? "Update alignment  " : "Get alignment  "}
+              {loading && <div className={styles.loadingSpinner}></div>}
             </button>
             {data && <NetworkGraph {...data} />}
           </div>
