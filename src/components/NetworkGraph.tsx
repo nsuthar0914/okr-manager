@@ -23,11 +23,19 @@ export const NetworkGraph: React.FC<Props> = ({
   useEffect(() => {
     const width = 600;
     const height = 400;
-
+    function zoomed(event) {
+      const { transform } = event;
+      svg.attr("transform", transform);
+    }
     const svg = d3
       .select(svgRef.current)
       .attr("viewBox", [-width / 2, -height / 2, width, height])
+      .attr("width", "100%")
+      .attr("height", "100%")
       .style("font", "12px sans-serif");
+
+    const zoom = d3.zoom().scaleExtent([0.5, 2]).on("zoom", zoomed);
+    svg.call(zoom);
     svg.selectAll("*").remove();
     // create the links
     const links = [];
@@ -60,7 +68,18 @@ export const NetworkGraph: React.FC<Props> = ({
       );
     });
     themes.forEach((theme) => nodes.push({ id: theme, type: "theme" }));
+    // create degree map
+    const degreeMap = new Map(nodes.map((node) => [node.id, 0]));
+    links.forEach((link) => {
+      degreeMap.set(link.source, degreeMap.get(link.source) + 1);
+      degreeMap.set(link.target, degreeMap.get(link.target) + 1);
+    });
 
+    // create node size scale
+    const nodeSizeScale = d3
+      .scaleLinear()
+      .domain(d3.extent(degreeMap.values()))
+      .range([10, 40]);
     const simulation = d3
       .forceSimulation(nodes)
       .force(
@@ -68,7 +87,7 @@ export const NetworkGraph: React.FC<Props> = ({
         d3
           .forceLink(links)
           .id((d) => d.id)
-          .distance((d) => 100 - 100 * d.value)
+          .distance((d) => 500 - 500 * d.value)
       )
       .force("charge", d3.forceManyBody())
       .force("center", d3.forceCenter());
@@ -144,7 +163,7 @@ export const NetworkGraph: React.FC<Props> = ({
       .append("circle")
       .attr("stroke", "white")
       .attr("stroke-width", 1.5)
-      .attr("r", 8)
+      .attr("r", (d) => nodeSizeScale(degreeMap.get(d.id)))
       .attr("fill", (d) => {
         switch (d.type) {
           case "theme":
@@ -160,9 +179,10 @@ export const NetworkGraph: React.FC<Props> = ({
 
     node
       .append("text")
-      .style("font-size", "8px")
-      .attr("x", 8)
-      .attr("y", "0.31em")
+      .style("font-size", (d) => nodeSizeScale(degreeMap.get(d.id)) / 3)
+      .attr("x", (d) => 0) // center the text horizontally
+      .attr("y", (d) => 0) // center the text vertically
+      .attr("text-anchor", "middle") // center the text horizontally and vertically
       .text((d) => (d.type != "objective" ? d.id : ""))
       .clone(true)
       .lower()
@@ -184,7 +204,7 @@ export const NetworkGraph: React.FC<Props> = ({
   }, [themeMatches, userMatches, themes]);
 
   return (
-    <div style={{ width: "100%" }}>
+    <div style={{ width: "100%", overflow: "hidden" }}>
       <svg ref={svgRef} />
     </div>
   );
