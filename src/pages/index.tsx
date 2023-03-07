@@ -28,32 +28,37 @@ export default function Home() {
       }
     }
     setLoading(true);
-    const results = await fetch("/api/match-objectives", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body,
-      cache: "force-cache",
-    });
-    const newData = await results.json();
-    setData(newData);
-    if (cachedData) {
-      const parsedData = JSON.parse(cachedData);
-      parsedData[body] = newData;
-      localStorage.setItem(
-        "match-objectives-cache",
-        JSON.stringify(parsedData)
-      );
-    } else {
-      const parsedData = {};
-      parsedData[body] = newData;
-      localStorage.setItem(
-        "match-objectives-cache",
-        JSON.stringify(parsedData)
-      );
+    try {
+      const results = await fetch("/api/match-objectives", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body,
+        cache: "force-cache",
+      });
+      const newData = await results.json();
+      setData(newData);
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        parsedData[body] = newData;
+        localStorage.setItem(
+          "match-objectives-cache",
+          JSON.stringify(parsedData)
+        );
+      } else {
+        const parsedData = {};
+        parsedData[body] = newData;
+        localStorage.setItem(
+          "match-objectives-cache",
+          JSON.stringify(parsedData)
+        );
+      }
+      setLoading(false);
+    } catch (error) {
+      window.alert("Server limit reached. Please try again after some time.");
+      setLoading(false);
     }
-    setLoading(false);
     // const results = mockResponse;
     // setData(results);
   };

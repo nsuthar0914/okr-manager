@@ -79,7 +79,7 @@ export const NetworkGraph: React.FC<Props> = ({
     const nodeSizeScale = d3
       .scaleLinear()
       .domain(d3.extent(degreeMap.values()))
-      .range([10, 40]);
+      .range([20, 40]);
     const simulation = d3
       .forceSimulation(nodes)
       .force(
@@ -163,7 +163,9 @@ export const NetworkGraph: React.FC<Props> = ({
       .append("circle")
       .attr("stroke", "white")
       .attr("stroke-width", 1.5)
-      .attr("r", (d) => nodeSizeScale(degreeMap.get(d.id)))
+      .attr("r", (d) =>
+        d.type === "objective" ? 12 : nodeSizeScale(degreeMap.get(d.id))
+      )
       .attr("fill", (d) => {
         switch (d.type) {
           case "theme":
