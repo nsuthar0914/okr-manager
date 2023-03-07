@@ -23,10 +23,16 @@ export const ObjectivesForm = ({
       updatedUsers[index].id = event.target.value;
     } else if (type === "objective") {
       updatedUsers[index].objectives[event.target.name] = event.target.value;
+      updateInputHeight(event.target);
     } else {
       setSuggestions({ ...suggestions, [index]: event.target.value });
     }
     setUsers(updatedUsers);
+  };
+
+  const updateInputHeight = (input) => {
+    input.style.height = "auto";
+    input.style.height = `${input.scrollHeight}px`;
   };
 
   const handleAddUser = () => {
@@ -122,10 +128,9 @@ export const ObjectivesForm = ({
             <div>Objectives</div>
             {user.objectives.map((objective, objectiveIndex) => (
               <React.Fragment key={`${userIndex}-${objectiveIndex}`}>
-                <input
-                  className={styles.input}
+                <textarea
+                  className={styles.textarea}
                   key={objectiveIndex}
-                  type="text"
                   placeholder={`Objective ${objectiveIndex + 1}`}
                   name={objectiveIndex}
                   value={objective}
@@ -133,6 +138,12 @@ export const ObjectivesForm = ({
                     handleChange(event, userIndex, "objective")
                   }
                   disabled={userIndex === loading}
+                  style={{
+                    height: "auto",
+                    overflow: "hidden",
+                    resize: "none",
+                    boxSizing: "border-box",
+                  }}
                 />
 
                 <button
